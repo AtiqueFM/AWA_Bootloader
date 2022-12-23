@@ -1,0 +1,3 @@
+Application.c:18:6:EraseApplicationMemory	8	static
+Application.c:33:6:ReadHEXFILEfromFlash	8	static
+Application.c:38:6:putMessages	16	static

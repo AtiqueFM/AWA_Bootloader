@@ -1,0 +1,4 @@
+Flash.c:12:6:EraseFlashSector	16	static
+Flash.c:22:6:SetFlash	24	static
+Flash.c:35:6:WriteDATAintoFlash	40	static
+Flash.c:70:6:FlashRead	32	static
