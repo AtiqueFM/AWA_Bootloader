@@ -30,6 +30,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#define CONFIG_DATA_FUNC __attribute__((section(".mysection")))
 #define SHOW_UART2_STATUS
 //#define DISABLE
 /* USER CODE END PTD */
@@ -47,7 +48,8 @@
 UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
-
+/*Local variable*/
+bootloader_handle_t global_BOOTLOADER_HANLDE_STRUCT;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,7 +68,7 @@ uint8_t msg_buffer[100];
 uint8_t file_info_flag = 0;//if 1 -> no of rows, if 2 -> no of bytes in the hex file
 uint32_t no_of_rows = 0;
 uint16_t live_data_row = 0;
-
+bootloader_status_hanlde_t BOOTLOADER_STATUSBITS;
 extern uint8_t data_bytes;
 extern uint32_t FLASHStartingAddress;
 extern uint16_t recv_packet_counter;
@@ -74,6 +76,11 @@ extern uint16_t recv_packet_counter;
 typedef void (*pFunction)(void);
 
 void go2App(void);
+
+void configuration_data(void);
+
+static void load_default_confif_data_in_flash(void);
+static void erase_program_partition_sectors(uint8_t sector);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -148,14 +155,20 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  go2App();
+
+  //go2App();
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+#if 1
+  configuration_data();
+#else
+  load_default_confif_data_in_flash();
+  FlashRead(CONFIG_DATA_ADDRESS, global_BOOTLOADER_HANLDE_STRUCT.u8array, sizeof(global_BOOTLOADER_HANLDE_STRUCT.u8array));
+#endif
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -384,6 +397,99 @@ uint16_t crc_calc(char* input_str, int len )
         }
     }
     return crc1;
+}
+
+void configuration_data(void)
+{
+	/*Local variable*/
+	bootloader_handle_t BOOTLOADER_HANLDE_STRUCT;
+	uint32_t lu16_crc_16_bits = 0;
+	uint16_t lu16_cal_crc_16_bits = 0;
+
+	/*Set the memory location to zero*/
+	memset(&BOOTLOADER_HANLDE_STRUCT,0,sizeof(BOOTLOADER_HANLDE_STRUCT));
+
+	/*Read the configuration data from FLASH 0x8000000U*/
+	FlashRead(CONFIG_DATA_ADDRESS, BOOTLOADER_HANLDE_STRUCT.u32array, sizeof(BOOTLOADER_HANLDE_STRUCT.u8array)/4);
+
+	/*Read the crc from flash*/
+	lu16_crc_16_bits = BOOTLOADER_HANLDE_STRUCT.crc_16_bits;
+
+	//uint16_t temp = sizeof(BOOTLOADER_HANLDE_STRUCT);
+	/*Calculate the crc of the data from flash*/
+	lu16_cal_crc_16_bits = crc_calc((char *)BOOTLOADER_HANLDE_STRUCT.u8array, sizeof(BOOTLOADER_HANLDE_STRUCT.u8array) - LENGTH_OF_CRC_IN_BYTES);
+
+	/*Compare the stored and calculated CRC*/
+	if(lu16_cal_crc_16_bits == lu16_crc_16_bits)
+	{
+		/*Data is valid*/
+		BOOTLOADER_STATUSBITS.data_valid = SET;
+	}else
+	{
+		/*Data is invalid load*/
+		BOOTLOADER_STATUSBITS.data_invalid = SET;
+		/*Check for memory corruption*/
+		if(!strcmp((const char *)BOOTLOADER_HANLDE_STRUCT.reboot_string,(const char *)DEAFBEEF_STRING))
+		{
+			//there is memory corruption
+			BOOTLOADER_STATUSBITS.data_corrupt = SET;
+			//Raise flag for configuration memory corruption
+#if (LOAD_DEFAULT_CONFIG_TEST == 1)
+#if 0
+			//erase the program partition sectors (Program A)
+			erase_program_partition_sectors(5);
+			erase_program_partition_sectors(6);
+			erase_program_partition_sectors(7);
+			erase_program_partition_sectors(8);
+#endif
+			//load default data
+			load_default_confif_data_in_flash();
+#else
+#endif
+
+		}else
+		{
+			//first time boot
+			BOOTLOADER_STATUSBITS.first_boot = SET;
+			//load default data
+			load_default_confif_data_in_flash();
+
+		}
+	}
+}
+
+static void load_default_confif_data_in_flash(void)
+{
+	/*Local variable*/
+	bootloader_handle_t BOOTLOADER_HANLDE_STRUCT;
+	uint16_t lu16_cal_crc_16_bits = 0;
+
+	/*Set the memory location to zero*/
+	memset(&BOOTLOADER_HANLDE_STRUCT.u8array,0,sizeof(BOOTLOADER_HANLDE_STRUCT.u8array));
+
+	//BOOTLOADER_HANLDE_STRUCT.ACTIVE_PROGRAM.program_ResetHandler_address = PARTION_A_START_ADDRESS;
+	memcpy(BOOTLOADER_HANLDE_STRUCT.reboot_string,DEAFBEEF_STRING,sizeof(DEAFBEEF_STRING));
+
+	//Calculate CRC
+	lu16_cal_crc_16_bits = crc_calc((char *)BOOTLOADER_HANLDE_STRUCT.u8array,
+			sizeof(BOOTLOADER_HANLDE_STRUCT.u8array) - LENGTH_OF_CRC_IN_BYTES);
+
+	BOOTLOADER_HANLDE_STRUCT.crc_16_bits = lu16_cal_crc_16_bits;
+
+	//erase the setor
+	erase_program_partition_sectors(3);
+
+	//Write the structure in the FLASH
+#if 0
+	WriteDATAintoFlash(CONFIG_DATA_ADDRESS, (uint8_t*)BOOTLOADER_HANLDE_STRUCT.u8array, sizeof(BOOTLOADER_HANLDE_STRUCT.u8array));
+#else
+	WriteDATAintoFlash(CONFIG_DATA_ADDRESS, BOOTLOADER_HANLDE_STRUCT.u32array, sizeof(BOOTLOADER_HANLDE_STRUCT.u32array)/4);
+#endif
+
+}
+static void erase_program_partition_sectors(uint8_t sector)
+{
+	EraseFlashSector(sector);
 }
 /* USER CODE END 4 */
 

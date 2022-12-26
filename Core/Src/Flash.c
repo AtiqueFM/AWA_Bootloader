@@ -32,7 +32,11 @@ void SetFlash(uint32_t Address,uint32_t flag)
 
 }
 
+#if 0
 void WriteDATAintoFlash(uint32_t Address,uint8_t* pData,uint32_t wordLength)
+#else
+void WriteDATAintoFlash(uint32_t Address,uint32_t* pData,uint32_t wordLength)
+#endif
 {
 	//Local variables
 	uint32_t index = 0;
@@ -41,13 +45,13 @@ void WriteDATAintoFlash(uint32_t Address,uint8_t* pData,uint32_t wordLength)
 	/*		DATA WRITE			*/
 	while(index < wordLength)
 	{
-#if 0
+#if 1
 		if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, pData[index]) == HAL_OK)
 #else
 		if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, Address, pData[index]) == HAL_OK)
 #endif
 		{
-#if 0
+#if 1
 			//Increment the flash address by 4bytes for 32 bits of data is being stored
 			Address += 4;
 #else
@@ -71,7 +75,7 @@ void FlashRead(uint32_t Address,uint32_t *pData,uint32_t numberofwords)
 {
 	uint32_t StartPageAddress = 0;
 	StartPageAddress = Address;
-
+#if 1
 	while(1)
 	{
 		*pData = *(uint32_t *)StartPageAddress;
@@ -79,4 +83,13 @@ void FlashRead(uint32_t Address,uint32_t *pData,uint32_t numberofwords)
 		StartPageAddress += 4;
 		if (!(numberofwords--)) break;
 	}
+#else
+	while(1)
+	{
+		*pData = *(uint8_t *)StartPageAddress;
+		pData += 1;
+		StartPageAddress += 1;
+		if (!(numberofwords--)) break;
+	}
+#endif
 }

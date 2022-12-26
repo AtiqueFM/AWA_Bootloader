@@ -32,12 +32,14 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+/*TEST FLAGS*/
+#define LOAD_DEFAULT_CONFIG_TEST	1
 /*Code version*/
-#define MAJOR_VER					1
-#define MINOR_VER					3
+#define MAJOR_VER					2
+#define MINOR_VER					0
 #define BUG_FIX						0
 /*Date of last modification*/
-#define DD							23
+#define DD							26
 #define MM							12
 #define YY							22
 
@@ -50,6 +52,10 @@ extern "C" {
 #define HEXFILE_FLASHADDRESS		(uint32_t)0x8040000
 #define UART_BUFFER_SIZE_U8			512								/*<Warning :- Address in multiples of 4*/
 #define UART_BUFFER_SIZE_U32		UART_BUFFER_SIZE_U8 / 4
+#define CONFIG_DATA_ADDRESS			(uint32_t)0x800c000UL			/*Flash address for configuration data*/
+#define LENGTH_OF_CRC_IN_BYTES		4
+#define DEAFBEEF_STRING				"DEADBEEF"
+#define PARTION_A_START_ADDRESS		(uint32_t)0x8004000UL
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -90,6 +96,59 @@ typedef union
 	uint8_t UART_Rx_buffer[UART_BUFFER_SIZE_U8];
 	uint32_t UART_Rx_Word_buffer[UART_BUFFER_SIZE_U32];
 }Buffer_t;
+
+typedef struct __attribute__((packed))
+{
+	uint32_t BOOTLOADER_PARTITION_SIZE;
+	uint32_t BOOT_SEQUENCE;
+	uint32_t PARTION_A_RESET_HANDLER_ADDRESS;
+	uint32_t PARTION_A_FLASH_SIZE;
+	uint32_t PARTION_A_CCRAM_SIZE;
+	uint32_t PARTION_B_RESET_HANDLER_ADDRESS;
+	uint32_t PARTION_B_FLASH_SIZE;
+	uint32_t PARTION_B_CCRAM_SIZE;
+}bootloader_configuration_handle_t;
+
+typedef struct __attribute__((packed)){
+	uint32_t program_ResetHandler_address;
+	uint32_t program_16bit_crc;
+	uint32_t program_size;
+	uint32_t program_partion;
+	uint32_t program_loadtimestamp;
+	uint32_t program_reeived_timestamp;
+	uint32_t program_Firmware_version;
+	uint32_t program_Author;
+	uint32_t program_status_flags;
+}program_configuration_hanlde_t;
+
+
+typedef union __attribute__((packed)){
+
+	uint8_t u8array[(sizeof(uint8_t) * 8)
+					+ sizeof(bootloader_configuration_handle_t)
+					+ sizeof(program_configuration_hanlde_t)
+					+ sizeof(program_configuration_hanlde_t)
+					+ sizeof(uint32_t)
+					+ sizeof(uint32_t)];
+	uint32_t u32array[30];
+
+	struct{
+		uint8_t reboot_string[8];
+		bootloader_configuration_handle_t BOOTLOADER_CONFIG_DATA;
+		program_configuration_hanlde_t ACTIVE_PROGRAM;
+		program_configuration_hanlde_t BACKUP_PROGRAM;
+		uint32_t Failure_state_handle;
+		uint32_t crc_16_bits;
+	};
+}bootloader_handle_t;
+
+
+typedef struct{
+	unsigned data_valid 	: 1;
+	unsigned data_invalid	: 1;
+	unsigned data_corrupt	: 1;
+	unsigned first_boot		: 1;
+}bootloader_status_hanlde_t;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
