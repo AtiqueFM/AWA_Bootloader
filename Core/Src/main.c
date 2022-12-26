@@ -30,6 +30,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#define CONFIG_DATA_FUNC __attribute__((section(".mysection")))
 #define SHOW_UART2_STATUS
 //#define DISABLE
 /* USER CODE END PTD */
@@ -74,6 +75,8 @@ extern uint16_t recv_packet_counter;
 typedef void (*pFunction)(void);
 
 void go2App(void);
+
+void CONFIG_DATA_FUNC configuration_data(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -384,6 +387,11 @@ uint16_t crc_calc(char* input_str, int len )
         }
     }
     return crc1;
+}
+
+void CONFIG_DATA_FUNC configuration_data(void)
+{
+	bootloader_handle_t BOOTLOADER_HANLDE_STRUCT;
 }
 /* USER CODE END 4 */
 

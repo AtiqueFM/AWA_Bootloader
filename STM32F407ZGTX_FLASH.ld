@@ -64,10 +64,12 @@ MEMORY
 {
   CCMRAM	(xrw)	: ORIGIN = 0x10000000,	LENGTH = 64K
   RAM	(xrw)	: ORIGIN = 0x20000000,	LENGTH = 128K
-  FLASH	(rx)	: ORIGIN = 0x8000000,	LENGTH = 256K
+  CONFIG_DATA(rx) : ORIGIN = 0x8000000, LENGTH = 16k
+  FLASH	(rx)	: ORIGIN = 0x8004000,	LENGTH = 112K
 }
 
 /* Sections */
+  
 SECTIONS
 {
   /* The startup code into "FLASH" Rom type memory */
@@ -94,7 +96,16 @@ SECTIONS
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
   } >FLASH
-
+  
+  .mysection :
+  {
+    . = ALIGN(4);
+    __mysection_start__ = .;    
+    *(.mysection*)        
+    __mysection_end__ = .;
+  } > CONFIG_DATA
+  ASSERT(LENGTH(CONFIG_DATA) >= (__mysection_end__ - __mysection_start__), "my section memory overflow!")
+  
   /* Constant data into "FLASH" Rom type memory */
   .rodata :
   {
