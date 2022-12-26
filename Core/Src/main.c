@@ -258,7 +258,7 @@ int main(void)
 		live_data_row += 1;
 		//Write data into FLASH
 		WriteDATAintoFlash(FLASHStartingAddress, UART_Buffer.UART_Rx_buffer, data_bytes);
-		if(recv_packet_counter >= no_of_rows - 2)//410-1)
+		if(recv_packet_counter >= no_of_rows - 1)//410-1)
 		{
 			//Data received from UART
 			putMessages((uint8_t*)"Jumping to application\n\r");

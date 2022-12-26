@@ -757,13 +757,13 @@ int main(void)
  80006f8:	461a      	mov	r2, r3
  80006fa:	4911      	ldr	r1, [pc, #68]	; (8000740 <main+0xd8>)
  80006fc:	f7ff ff5a 	bl	80005b4 <WriteDATAintoFlash>
-		if(recv_packet_counter >= no_of_rows - 2)//410-1)
+		if(recv_packet_counter >= no_of_rows - 1)//410-1)
  8000700:	4b17      	ldr	r3, [pc, #92]	; (8000760 <main+0xf8>)
  8000702:	881b      	ldrh	r3, [r3, #0]
  8000704:	461a      	mov	r2, r3
  8000706:	4b17      	ldr	r3, [pc, #92]	; (8000764 <main+0xfc>)
  8000708:	681b      	ldr	r3, [r3, #0]
- 800070a:	3b02      	subs	r3, #2
+ 800070a:	3b01      	subs	r3, #1
  800070c:	429a      	cmp	r2, r3
  800070e:	d305      	bcc.n	800071c <main+0xb4>
 		{
