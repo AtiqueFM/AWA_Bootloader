@@ -52,8 +52,8 @@ extern "C" {
 #define HEXFILE_FLASHADDRESS		(uint32_t)0x8040000
 #define UART_BUFFER_SIZE_U8			512								/*<Warning :- Address in multiples of 4*/
 #define UART_BUFFER_SIZE_U32		UART_BUFFER_SIZE_U8 / 4
-#define CONFIG_DATA_ADDRESS			(uint32_t)0x8000000UL			/*Flash address for configuration data*/
-#define LENGTH_OF_CRC_IN_BYTES		2
+#define CONFIG_DATA_ADDRESS			(uint32_t)0x800c000UL			/*Flash address for configuration data*/
+#define LENGTH_OF_CRC_IN_BYTES		4
 #define DEAFBEEF_STRING				"DEADBEEF"
 #define PARTION_A_START_ADDRESS		(uint32_t)0x8004000UL
 /* USER CODE END Includes */
@@ -97,7 +97,7 @@ typedef union
 	uint32_t UART_Rx_Word_buffer[UART_BUFFER_SIZE_U32];
 }Buffer_t;
 
-typedef struct
+typedef struct __attribute__((packed))
 {
 	uint32_t BOOTLOADER_PARTITION_SIZE;
 	uint32_t BOOT_SEQUENCE;
@@ -109,7 +109,7 @@ typedef struct
 	uint32_t PARTION_B_CCRAM_SIZE;
 }bootloader_configuration_handle_t;
 
-typedef struct{
+typedef struct __attribute__((packed)){
 	uint32_t program_ResetHandler_address;
 	uint32_t program_16bit_crc;
 	uint32_t program_size;
@@ -121,21 +121,27 @@ typedef struct{
 	uint32_t program_status_flags;
 }program_configuration_hanlde_t;
 
-typedef union{
+
+typedef union __attribute__((packed)){
+
 	uint8_t u8array[(sizeof(uint8_t) * 8)
 					+ sizeof(bootloader_configuration_handle_t)
-					+ (sizeof(program_configuration_hanlde_t)*2)
-					+ (sizeof(uint32_t))
-					+ (sizeof(uint16_t))];
+					+ sizeof(program_configuration_hanlde_t)
+					+ sizeof(program_configuration_hanlde_t)
+					+ sizeof(uint32_t)
+					+ sizeof(uint32_t)];
+	uint32_t u32array[30];
+
 	struct{
-		uint8_t reboot_string[10];
+		uint8_t reboot_string[8];
 		bootloader_configuration_handle_t BOOTLOADER_CONFIG_DATA;
 		program_configuration_hanlde_t ACTIVE_PROGRAM;
 		program_configuration_hanlde_t BACKUP_PROGRAM;
 		uint32_t Failure_state_handle;
-		uint16_t crc_16_bits;
+		uint32_t crc_16_bits;
 	};
 }bootloader_handle_t;
+
 
 typedef struct{
 	unsigned data_valid 	: 1;
