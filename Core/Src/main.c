@@ -163,12 +163,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-#if 1
   configuration_data();
-#else
-  load_default_confif_data_in_flash();
-  FlashRead(CONFIG_DATA_ADDRESS, global_BOOTLOADER_HANLDE_STRUCT.u8array, sizeof(global_BOOTLOADER_HANLDE_STRUCT.u8array));
-#endif
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -270,7 +265,8 @@ int main(void)
 		//putMessages((uint8_t*)"Received data from UART\n\r");
 		live_data_row += 1;
 		//Write data into FLASH
-		WriteDATAintoFlash(FLASHStartingAddress, UART_Buffer.UART_Rx_buffer, data_bytes);
+		//WriteDATAintoFlash(FLASHStartingAddress, UART_Buffer.UART_Rx_buffer, data_bytes);
+		WriteByteintoFlash(FLASHStartingAddress, UART_Buffer.UART_Rx_buffer, data_bytes);
 		if(recv_packet_counter >= no_of_rows - 1)//410-1)
 		{
 			//Data received from UART
@@ -435,16 +431,15 @@ void configuration_data(void)
 			BOOTLOADER_STATUSBITS.data_corrupt = SET;
 			//Raise flag for configuration memory corruption
 #if (LOAD_DEFAULT_CONFIG_TEST == 1)
-#if 0
+
 			//erase the program partition sectors (Program A)
 			erase_program_partition_sectors(5);
 			erase_program_partition_sectors(6);
 			erase_program_partition_sectors(7);
 			erase_program_partition_sectors(8);
-#endif
+
 			//load default data
 			load_default_confif_data_in_flash();
-#else
 #endif
 
 		}else
@@ -480,11 +475,8 @@ static void load_default_confif_data_in_flash(void)
 	erase_program_partition_sectors(3);
 
 	//Write the structure in the FLASH
-#if 0
-	WriteDATAintoFlash(CONFIG_DATA_ADDRESS, (uint8_t*)BOOTLOADER_HANLDE_STRUCT.u8array, sizeof(BOOTLOADER_HANLDE_STRUCT.u8array));
-#else
 	WriteDATAintoFlash(CONFIG_DATA_ADDRESS, BOOTLOADER_HANLDE_STRUCT.u32array, sizeof(BOOTLOADER_HANLDE_STRUCT.u32array)/4);
-#endif
+
 
 }
 static void erase_program_partition_sectors(uint8_t sector)
