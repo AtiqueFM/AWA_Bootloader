@@ -16,5 +16,5 @@ void SetFlash(uint32_t Address,uint32_t flag);
 
 void WriteDATAintoFlash(uint32_t Address,uint8_t* pData,uint32_t wordLength);
 
-void FlashRead(uint32_t Address,uint32_t *pData,uint32_t numberofwords);
+void FlashRead(uint32_t Address,uint8_t *pData,uint32_t numberofwords);
 #endif /* INC_FLASH_H_ */

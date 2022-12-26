@@ -67,11 +67,11 @@ void WriteDATAintoFlash(uint32_t Address,uint8_t* pData,uint32_t wordLength)
 }
 
 
-void FlashRead(uint32_t Address,uint32_t *pData,uint32_t numberofwords)
+void FlashRead(uint32_t Address,uint8_t *pData,uint32_t numberofwords)
 {
 	uint32_t StartPageAddress = 0;
 	StartPageAddress = Address;
-
+#if 0
 	while(1)
 	{
 		*pData = *(uint32_t *)StartPageAddress;
@@ -79,4 +79,13 @@ void FlashRead(uint32_t Address,uint32_t *pData,uint32_t numberofwords)
 		StartPageAddress += 4;
 		if (!(numberofwords--)) break;
 	}
+#else
+	while(1)
+	{
+		*pData = *(uint8_t *)StartPageAddress;
+		pData += 1;
+		StartPageAddress += 1;
+		if (!(numberofwords--)) break;
+	}
+#endif
 }
