@@ -156,14 +156,14 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
-  //go2App();
+  go2App();
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  configuration_data();
+  //configuration_data();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
