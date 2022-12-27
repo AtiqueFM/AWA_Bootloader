@@ -69,6 +69,9 @@ uint8_t file_info_flag = 0;//if 1 -> no of rows, if 2 -> no of bytes in the hex 
 uint32_t no_of_rows = 0;
 uint16_t live_data_row = 0;
 bootloader_status_hanlde_t BOOTLOADER_STATUSBITS;
+uint32_t lu16_cal_crc_16_bits = 0;
+bootloader_handle_t BOOTLOADER_HANLDE_STRUCT;
+
 extern uint8_t data_bytes;
 extern uint32_t FLASHStartingAddress;
 extern uint16_t recv_packet_counter;
@@ -135,7 +138,11 @@ void go2App(void)
 	}
 }
 
-
+void test_memry_clean(void)
+{
+	for(int i = 4;i<9;i++)
+		erase_program_partition_sectors(i);
+}
 /* USER CODE END 0 */
 
 /**
@@ -155,7 +162,19 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+#if 1
+  	  //test_memry_clean();
+	/*Local variable*/
 
+
+	/*Set the memory location to zero*/
+	//memset(&BOOTLOADER_HANLDE_STRUCT,0,sizeof(BOOTLOADER_HANLDE_STRUCT));
+
+	/*Read the configuration data from FLASH 0x8000000U*/
+	FlashRead(CONFIG_DATA_ADDRESS, BOOTLOADER_HANLDE_STRUCT.u32array, sizeof(BOOTLOADER_HANLDE_STRUCT.u8array)/4);
+
+	lu16_cal_crc_16_bits = crc_calc(&BOOTLOADER_HANLDE_STRUCT.u8array[0], 116);
+#endif
   go2App();
   /* USER CODE END Init */
 

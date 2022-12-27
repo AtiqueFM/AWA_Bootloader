@@ -52,7 +52,7 @@ extern "C" {
 #define HEXFILE_FLASHADDRESS		(uint32_t)0x8020000				/*<Address of the application*/
 #define UART_BUFFER_SIZE_U8			512								/*<Warning :- Address in multiples of 4*/
 #define UART_BUFFER_SIZE_U32		UART_BUFFER_SIZE_U8 / 4
-#define CONFIG_DATA_ADDRESS			(uint32_t)0x800c000UL			/*Flash address for configuration data*/
+#define CONFIG_DATA_ADDRESS			(uint32_t)0x8010000UL			/*Flash address for configuration data*/
 #define LENGTH_OF_CRC_IN_BYTES		4
 #define DEAFBEEF_STRING				"DEADBEEF"
 #define PARTION_A_START_ADDRESS		(uint32_t)0x8004000UL
