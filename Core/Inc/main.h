@@ -56,6 +56,11 @@ extern "C" {
 #define LENGTH_OF_CRC_IN_BYTES		4
 #define DEAFBEEF_STRING				"DEADBEEF"
 #define PARTION_A_START_ADDRESS		(uint32_t)0x8004000UL
+
+//test
+#define PROGRAM_A					(volatile uint32_t)0x8020000UL
+#define PROGRAM_B					(volatile uint32_t)0x80A0000UL
+#define JUMP_FLAG_ADDRESS			(volatile uint32_t)0x8010000UL
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

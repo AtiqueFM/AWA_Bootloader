@@ -69,6 +69,7 @@ uint8_t file_info_flag = 0;//if 1 -> no of rows, if 2 -> no of bytes in the hex 
 uint32_t no_of_rows = 0;
 uint16_t live_data_row = 0;
 bootloader_status_hanlde_t BOOTLOADER_STATUSBITS;
+volatile uint32_t program_jump_address = 0;
 extern uint8_t data_bytes;
 extern uint32_t FLASHStartingAddress;
 extern uint16_t recv_packet_counter;
@@ -79,8 +80,9 @@ void go2App(void);
 
 void configuration_data(void);
 
-static void load_default_confif_data_in_flash(void);
+static void load_default_config_data_in_flash(void);
 static void erase_program_partition_sectors(uint8_t sector);
+static void program_swicting_test(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -104,10 +106,11 @@ void go2App(void)
 	uint32_t JumpAddress;
 	pFunction Jump_To_Application;
 
-	if(((*(uint32_t*)HEXFILE_FLASHADDRESS) & 0x2ffe0000) == 0x20020000)
+	if(((*(uint32_t*)program_jump_address) & 0x2ffe0000) == 0x20020000)
 	{
 		//App start
-		JumpAddress = *(uint32_t*) (HEXFILE_FLASHADDRESS + 4);//Jumping address to the reset handler
+//		JumpAddress = *(uint32_t*) (HEXFILE_FLASHADDRESS + 4);//Jumping address to the reset handler
+		JumpAddress = *(uint32_t*) (program_jump_address + 4);//Jumping address to the reset handler
 		Jump_To_Application = (pFunction)JumpAddress;//Function pointer to reset handler
 		//Data received from UART
 		putMessages((uint8_t*)"Jumping to application\n\r");
@@ -155,7 +158,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  program_swicting_test();
   go2App();
   /* USER CODE END Init */
 
@@ -439,7 +442,7 @@ void configuration_data(void)
 			erase_program_partition_sectors(8);
 
 			//load default data
-			load_default_confif_data_in_flash();
+			load_default_config_data_in_flash();
 #endif
 
 		}else
@@ -447,13 +450,13 @@ void configuration_data(void)
 			//first time boot
 			BOOTLOADER_STATUSBITS.first_boot = SET;
 			//load default data
-			load_default_confif_data_in_flash();
+			load_default_config_data_in_flash();
 
 		}
 	}
 }
 
-static void load_default_confif_data_in_flash(void)
+static void load_default_config_data_in_flash(void)
 {
 	/*Local variable*/
 	bootloader_handle_t BOOTLOADER_HANLDE_STRUCT;
@@ -482,6 +485,46 @@ static void load_default_confif_data_in_flash(void)
 static void erase_program_partition_sectors(uint8_t sector)
 {
 	EraseFlashSector(sector);
+}
+
+static void program_swicting_test(void)
+{
+	uint32_t flag = 0;
+	uint32_t write_flag = 0;
+	//read the flag from flash
+	/*Read the configuration data from FLASH 0x8000000U*/
+	FlashRead(JUMP_FLAG_ADDRESS, &flag, 1);
+	//if first time boot
+	if(flag == 0xFFFFFFFF || flag == 0x00)
+	{
+		//write flag 0xBB -> for program @ 0x80A0000
+		//Write the structure in the FLASH
+		erase_program_partition_sectors(4);
+		write_flag = 0xBB;
+		WriteDATAintoFlash(JUMP_FLAG_ADDRESS, &write_flag, 1);
+		//jump to the program
+		program_jump_address = PROGRAM_A;
+	}
+	//else if the flag is 0xAA -> for program @ 0x8020000
+	else if(flag == 0xAA)
+	{
+		//Write new flag 0xBB
+		write_flag = 0xBB;
+		erase_program_partition_sectors(4);
+		WriteDATAintoFlash(JUMP_FLAG_ADDRESS, &write_flag, 1);
+		//jump to the program
+		program_jump_address = PROGRAM_A;
+	}
+	//else if the flag is 0xBB -> for program @ 0x80A0000
+	else if(flag == 0xBB)
+	{
+		//Write new flag 0xAA
+		write_flag = 0xAA;
+		erase_program_partition_sectors(4);
+		WriteDATAintoFlash(JUMP_FLAG_ADDRESS, &write_flag, 1);
+		//jump to the program
+		program_jump_address = PROGRAM_B;
+	}
 }
 /* USER CODE END 4 */
 
