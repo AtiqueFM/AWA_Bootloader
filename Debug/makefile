@@ -33,6 +33,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 AWA_Bootloader.list \
 
+OBJCOPY_HEX += \
+AWA_Bootloader.hex \
+
 
 # All Target
 all: AWA_Bootloader.elf secondary-outputs
@@ -53,12 +56,17 @@ AWA_Bootloader.list: $(EXECUTABLES)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+AWA_Bootloader.hex: $(EXECUTABLES)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "AWA_Bootloader.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
 	-$(RM) *
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX)
 
 .PHONY: all clean dependents
 .SECONDARY:

@@ -231,7 +231,7 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   //Start the boot-loader state machine
-  FOTA_BoorloaderStateMachine();
+  //FOTA_BoorloaderStateMachine();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
