@@ -67,7 +67,6 @@ extern Buffer_t UART_Buffer;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-//extern TIM_HandleTypeDef htim3;
 extern UART_HandleTypeDef huart6;
 /* USER CODE BEGIN EV */
 
@@ -210,38 +209,17 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles TIM3 global interrupt.
-  */
-#if 0
-void TIM3_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM3_IRQn 0 */
-
-  /* USER CODE END TIM3_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim3);
-  /* USER CODE BEGIN TIM3_IRQn 1 */
-  FOTA_Hearbeat();
-  /* USER CODE END TIM3_IRQn 1 */
-}
-#endif
-/**
-  * @brief This function handles USART2 global interrupt.
+  * @brief This function handles USART6 global interrupt.
   */
 void USART6_IRQHandler(void)
 {
-  /* USER CODE BEGIN USART2_IRQn 0 */
+  /* USER CODE BEGIN USART6_IRQn 0 */
 
-  /* USER CODE END USART2_IRQn 0 */
+  /* USER CODE END USART6_IRQn 0 */
   HAL_UART_IRQHandler(&huart6);
-  /* USER CODE BEGIN USART2_IRQn 1 */
-//  Rx_Counter += 1;
-//  if(Rx_Counter >= 512)
-//  {
-//	  Rx_Counter = 0;
-//  	  UART_Rx_Complete = SET;//Will be RESET after calculating CRC and matching
-//  }
+  /* USER CODE BEGIN USART6_IRQn 1 */
 
-  /* USER CODE END USART2_IRQn 1 */
+  /* USER CODE END USART6_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

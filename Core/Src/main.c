@@ -143,6 +143,26 @@ void test_memry_clean(void)
 	for(int i = 4;i<9;i++)
 		erase_program_partition_sectors(i);
 }
+
+static void set_default_config_data(void)
+{
+    uint32_t lu32_crc = 0;
+    bootloader_handle_t struct_BOOTLODERDATA;
+    memset(struct_BOOTLODERDATA.u8array,0,sizeof(struct_BOOTLODERDATA.u8array));
+    //strcpy(struct_BOOTLODERDATA.reboot_string,STARTUP_STRING);
+    struct_BOOTLODERDATA.BOOTLOADER_CONFIG_DATA.BOOT_SEQUENCE = 1;
+    struct_BOOTLODERDATA.BOOTLOADER_CONFIG_DATA.BOOTLOADER_PARTITION_SIZE = 64;
+    struct_BOOTLODERDATA.BOOTLOADER_CONFIG_DATA.PARTION_A_FLASH_SIZE = 512;
+    struct_BOOTLODERDATA.BOOTLOADER_CONFIG_DATA.PARTION_B_FLASH_SIZE = 384;
+
+    char *pData = NULL;
+    pData = (char*)struct_BOOTLODERDATA.u8array;
+    uint32_t len = sizeof(struct_BOOTLODERDATA.u8array);
+    len -= 4;
+    lu32_crc = crc_calc(pData,len);
+    struct_BOOTLODERDATA.crc_16_bits = lu32_crc;
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -166,14 +186,14 @@ int main(void)
   	  //test_memry_clean();
 	/*Local variable*/
 
-
+  	  //set_default_config_data();
 	/*Set the memory location to zero*/
-	//memset(&BOOTLOADER_HANLDE_STRUCT,0,sizeof(BOOTLOADER_HANLDE_STRUCT));
+	memset(&BOOTLOADER_HANLDE_STRUCT,0,sizeof(BOOTLOADER_HANLDE_STRUCT));
 
 	/*Read the configuration data from FLASH 0x8000000U*/
 	FlashRead(CONFIG_DATA_ADDRESS, BOOTLOADER_HANLDE_STRUCT.u32array, sizeof(BOOTLOADER_HANLDE_STRUCT.u8array)/4);
 
-	lu16_cal_crc_16_bits = crc_calc(&BOOTLOADER_HANLDE_STRUCT.u8array[0], 116);
+	lu16_cal_crc_16_bits = crc_calc(&BOOTLOADER_HANLDE_STRUCT.u8array[0], sizeof(BOOTLOADER_HANLDE_STRUCT.u8array) - 4);
 #endif
   go2App();
   /* USER CODE END Init */
@@ -359,7 +379,7 @@ static void MX_USART6_UART_Init(void)
 
   /* USER CODE END USART6_Init 1 */
   huart6.Instance = USART6;
-  huart6.Init.BaudRate = 115200;
+  huart6.Init.BaudRate = 115200;//38400;
   huart6.Init.WordLength = UART_WORDLENGTH_8B;
   huart6.Init.StopBits = UART_STOPBITS_1;
   huart6.Init.Parity = UART_PARITY_NONE;
