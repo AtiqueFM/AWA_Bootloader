@@ -78,7 +78,11 @@ extern uint16_t recv_packet_counter;
 
 typedef void (*pFunction)(void);
 
+#if 0
 void go2App(void);
+#else
+void go2App(uint32_t address);
+#endif
 
 void configuration_data(void);
 
@@ -102,6 +106,7 @@ void FOTA_Hearbeat(void)
 }
 #endif
 
+#if 0
 void go2App(void)
 {
 	uint32_t JumpAddress;
@@ -137,7 +142,43 @@ void go2App(void)
 		//Application code not present
 	}
 }
+#else
+void go2App(uint32_t address)
+{
+	uint32_t JumpAddress;
+	pFunction Jump_To_Application;
 
+	if(((*(uint32_t*)address) & 0x2ffe0000) == 0x20020000)
+	{
+		//App start
+		JumpAddress = *(uint32_t*) (address + 4);//Jumping address to the reset handler
+		Jump_To_Application = (pFunction)JumpAddress;//Function pointer to reset handler
+		//Data received from UART
+		putMessages((uint8_t*)"Jumping to application\n\r");
+		//Initialize the application stack pointer
+//		__set_MSP(*(uint32_t*)HEXFILE_FLASHADDRESS);//set the Main Stack Pointer to the start of the Application Flash memory location
+#ifdef DISABLE
+		__HAL_RCC_GPIOC_CLK_DISABLE();
+		  __HAL_RCC_GPIOD_CLK_DISABLE();
+		  __HAL_RCC_GPIOB_CLK_DISABLE();
+		  __HAL_RCC_GPIOA_CLK_DISABLE();
+		HAL_RCC_DeInit();
+		HAL_DeInit();
+		SysTick->CTRL = 0;
+		SysTick->LOAD = 0;
+		SysTick->VAL = 0;
+#endif
+		__set_MSP(*(uint32_t*)address);//set the Main Stack Pointer to the start of the Application Flash memory location
+		//jump to the application
+		Jump_To_Application();//Execute the Application program
+    //printf('C');
+
+	}
+	else{
+		//Application code not present
+	}
+}
+#endif
 void test_memry_clean(void)
 {
 	for(int i = 4;i<9;i++)
@@ -182,27 +223,15 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-#if 1
-  	  //test_memry_clean();
-	/*Local variable*/
 
-  	  //set_default_config_data();
-	/*Set the memory location to zero*/
-	memset(&BOOTLOADER_HANLDE_STRUCT,0,sizeof(BOOTLOADER_HANLDE_STRUCT));
-
-	/*Read the configuration data from FLASH 0x8000000U*/
-	FlashRead(CONFIG_DATA_ADDRESS, BOOTLOADER_HANLDE_STRUCT.u32array, sizeof(BOOTLOADER_HANLDE_STRUCT.u8array)/4);
-
-	lu16_cal_crc_16_bits = crc_calc(&BOOTLOADER_HANLDE_STRUCT.u8array[0], sizeof(BOOTLOADER_HANLDE_STRUCT.u8array) - 4);
-#endif
-  go2App();
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  //configuration_data();
+  //Start the boot-loader state machine
+  FOTA_BoorloaderStateMachine();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -411,6 +440,38 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void FOTA_BoorloaderStateMachine(void)
+{
+	/*Local variable*/
+	bootloader_handle_t BOOTLOADER_HANLDE_STRUCT;
+	uint32_t local_boot_sequence = 0;
+	uint32_t local_boot_address = 0;
+
+	/*Set the memory location to zero*/
+	memset(&BOOTLOADER_HANLDE_STRUCT,0,sizeof(BOOTLOADER_HANLDE_STRUCT));
+
+	/*Read the configuration data from FLASH 0x8010000U*/
+	FlashRead(CONFIG_DATA_ADDRESS, BOOTLOADER_HANLDE_STRUCT.u32array, sizeof(BOOTLOADER_HANLDE_STRUCT.u8array)/4);
+
+	/*Get BOOT sequence*/
+	local_boot_sequence = BOOTLOADER_HANLDE_STRUCT.BOOTLOADER_CONFIG_DATA.BOOT_SEQUENCE;
+
+	/*Switch cases for boot-loader*/
+	switch(local_boot_sequence)
+	{
+	case e_BOOT_ACTIVE:
+		local_boot_address = BOOTLOADER_HANLDE_STRUCT.ACTIVE_PROGRAM.program_ResetHandler_address;
+		break;
+
+	case e_BOOT_BACKUP:
+		local_boot_address = BOOTLOADER_HANLDE_STRUCT.BACKUP_PROGRAM.program_ResetHandler_address;
+		break;
+	}
+
+	/*Jump to the application*/
+	go2App(local_boot_address);
+
+}
 uint16_t crc_calc(char* input_str, int len )
 {
     int pos = 0,i = 0;

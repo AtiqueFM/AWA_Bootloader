@@ -56,6 +56,12 @@ extern "C" {
 #define LENGTH_OF_CRC_IN_BYTES		4
 #define DEAFBEEF_STRING				"DEADBEEF"
 #define PARTION_A_START_ADDRESS		(uint32_t)0x8004000UL
+
+//Booting sequence
+enum{
+	e_BOOT_ACTIVE = 1,
+	e_BOOT_BACKUP
+}enum_bootsequence;
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -85,6 +91,8 @@ void WriteHEXFILEtoFLash(void);
 void ReadHEXFILEfromFlash(void);
 void EraseApplicationMemory(void);
 
+
+void FOTA_BoorloaderStateMachine(void);
 uint8_t UART_Rx_Complete;
 uint16_t Rx_Counter;
 enum{
